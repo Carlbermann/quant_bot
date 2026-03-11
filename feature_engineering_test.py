@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """
-Feature Engineering Module
-Präzise Berechnungen für Candle-Daten, benötigt mehr Datenpunkte.
+Feature Engineering Module (2. Version)
+Benötigt weniger Datenpunkte, aber Ergebnisse unpräziser.
 """
 
 import pandas as pd
 import numpy as np
-from pathlib import Path
 
 INPUT_CSV = "BTCUSDT_1m_data.csv"
 OUTPUT_CSV = "BTCUSDT_1m_features.csv"
@@ -18,12 +17,12 @@ def load_data():
     return df
 
 
-def compute_rsi(series, window):
+def compute_rsi(series, window, min_periods=1):
     delta = series.diff()
     gain = delta.clip(lower=0)
     loss = -delta.clip(upper=0)
-    avg_gain = gain.rolling(window).mean()
-    avg_loss = loss.rolling(window).mean()
+    avg_gain = gain.rolling(window, min_periods=min_periods).mean()
+    avg_loss = loss.rolling(window, min_periods=min_periods).mean()
     rs = avg_gain / avg_loss
     rsi = 100 - (100 / (1 + rs))
     return rsi
@@ -35,19 +34,19 @@ def add_technical_indicators(df):
     df['returns'] = df['Close'].pct_change()
 
     for window in [5, 10, 20, 50, 100]:
-        df[f'sma_{window}'] = df['Close'].rolling(window).mean()
+        df[f'sma_{window}'] = df['Close'].rolling(window, min_periods=1).mean()
         df[f'ema_{window}'] = df['Close'].ewm(span=window, adjust=False).mean()
 
     for window in [5, 10, 20]:
-        df[f'vol_{window}'] = df['Close'].rolling(window).std()
-        df[f'rsi_{window}'] = compute_rsi(df['Close'], window)
-        df[f'vol_mean_{window}'] = df['Volume'].rolling(window).mean()
-        df[f'vol_std_{window}'] = df['Volume'].rolling(window).std()
+        df[f'vol_{window}'] = df['Close'].rolling(window, min_periods=1).std()
+        df[f'rsi_{window}'] = compute_rsi(df['Close'], window, min_periods=1)
+        df[f'vol_mean_{window}'] = df['Volume'].rolling(window, min_periods=1).mean()
+        df[f'vol_std_{window}'] = df['Volume'].rolling(window, min_periods=1).std()
 
     # Bollinger Bands
     window = 20
-    sma = df['Close'].rolling(window).mean()
-    std = df['Close'].rolling(window).std()
+    sma = df['Close'].rolling(window, min_periods=1).mean()
+    std = df['Close'].rolling(window, min_periods=1).std()
     df[f'bb_upper_{window}'] = sma + 2*std
     df[f'bb_lower_{window}'] = sma - 2*std
 
