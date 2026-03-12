@@ -1,3 +1,9 @@
+# Ignore API credentials
+/bot_variables.py
+
+# Ignore csv files
+*.csv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -205,6 +211,3 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-
-# Ignore API credentials
-api_variables.py
